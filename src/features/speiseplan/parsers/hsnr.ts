@@ -52,6 +52,14 @@ export enum AllergenKey {
     Crustaceans = '28',
     Molluscs = '29',
     Nuts = '30',
+    Almonds = '30a',
+    Hazelnuts = '30b',
+    Walnuts = '30c',
+    CashewNuts = '30d',
+    Pecans = '30e',
+    BrazilNuts = '30f',
+    Pistachios = '30g',
+    Macadamia = '30h',
     Eggs = '31',
     Poultry = 'G',
     Beef = 'R',
@@ -71,8 +79,13 @@ const allergenFilenameFixes: Record<string, string> = {
     '6': AllergenKey.Fish, // 6.png in allergens displays "Fish" (27)
     '7': AllergenKey.Barley, // 7.png in allergens displays "20c"
     '8': AllergenKey.Gluten, // 8.png in allergens displays "20"
+    '9': AllergenKey.Oats, // 9.png in allergens displays "20d"
+    '10': AllergenKey.Hazelnuts, // 10.png in allergens displays "30b"
+    '11': AllergenKey.Almonds, //11.png in allergens displays "30a"
     '12': AllergenKey.MilkLactose, // 12.png in allergens displays "19"
     '13': AllergenKey.Rye, // 13.png in allergens displays "20b"
+    '14': AllergenKey.Nuts, // 14.png in allergens displays "30"
+    '15': AllergenKey.SulphurDioxide, //15.png in allergense displays "18"
     '16': AllergenKey.Celery, // 16.png in allergens displays "22"
     '17': AllergenKey.Mustard, // 17.png in allergens displays "23"
     '18': AllergenKey.Sesame, // 18.png in allergens displays "24"
@@ -115,7 +128,8 @@ const legend: Record<string, Record<AdditiveKey | AllergenKey, string>> = {
         [AdditiveKey.Quinine]: 'chininhaltig',
 
         // Allergene
-        [AllergenKey.SulphurDioxide]: 'Schwefeldioxid und Sulfite',
+        [AllergenKey.SulphurDioxide]:
+            'Schwefeldioxid und Sulfite (mehr als 10 mg/kg oder l)',
         [AllergenKey.MilkLactose]:
             'Milch und Milcherzeugnisse (einschließlich Laktose)',
         [AllergenKey.Gluten]:
@@ -137,6 +151,14 @@ const legend: Record<string, Record<AdditiveKey | AllergenKey, string>> = {
         [AllergenKey.Crustaceans]: 'Krebstiere und Krebstiererzeugnisse',
         [AllergenKey.Molluscs]: 'Weichtiere und Weichtiererzeugnisse',
         [AllergenKey.Nuts]: 'Schalenfrüchte und Schalenfruchterzeugnisse',
+        [AllergenKey.Almonds]: 'Mandeln',
+        [AllergenKey.Hazelnuts]: 'Haselnüsse',
+        [AllergenKey.Walnuts]: 'Walnüsse',
+        [AllergenKey.CashewNuts]: 'Cashewkerne',
+        [AllergenKey.Pecans]: 'Pecannüsse',
+        [AllergenKey.BrazilNuts]: 'Paranüsse',
+        [AllergenKey.Pistachios]: 'Pistazien',
+        [AllergenKey.Macadamia]: 'Macadamia',
         [AllergenKey.Eggs]: 'Eier und Eierzeugnisse',
 
         // Diet tags
@@ -168,7 +190,8 @@ const legend: Record<string, Record<AdditiveKey | AllergenKey, string>> = {
         [AdditiveKey.Quinine]: 'contains quinine',
 
         // Allergens
-        [AllergenKey.SulphurDioxide]: 'Sulphur dioxide and sulphites',
+        [AllergenKey.SulphurDioxide]:
+            'Sulphur dioxide and sulphites (more than 10 mg/kg or l)',
         [AllergenKey.MilkLactose]: 'Milk and milk products (including lactose)',
         [AllergenKey.Gluten]:
             'Cereals containing gluten and products derived therefrom',
@@ -189,6 +212,14 @@ const legend: Record<string, Record<AdditiveKey | AllergenKey, string>> = {
         [AllergenKey.Crustaceans]: 'Crustaceans and crustacean products',
         [AllergenKey.Molluscs]: 'Molluscs and mollusc products',
         [AllergenKey.Nuts]: 'Nuts and nut products',
+        [AllergenKey.Almonds]: 'Almonds',
+        [AllergenKey.Hazelnuts]: 'Hazelnuts',
+        [AllergenKey.Walnuts]: 'Walnuts',
+        [AllergenKey.CashewNuts]: 'Cashew nuts',
+        [AllergenKey.Pecans]: 'Pecans',
+        [AllergenKey.BrazilNuts]: 'Brazil nuts',
+        [AllergenKey.Pistachios]: 'Pistachios',
+        [AllergenKey.Macadamia]: 'Macadamia',
         [AllergenKey.Eggs]: 'Eggs and egg products',
 
         // Diet tags
