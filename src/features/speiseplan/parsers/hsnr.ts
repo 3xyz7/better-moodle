@@ -91,6 +91,7 @@ const allergenFilenameFixes: Record<string, string> = {
     '18': AllergenKey.Sesame, // 18.png in allergens displays "24"
     '19': AllergenKey.Soybeans, // 19.png in allergens displays "21"
     '20': AllergenKey.Wheat, // 20.png in allergens displays "20a"
+    '27': AllergenKey.Peanuts, // 27.png in allergens displays "26" and for some reason the image it not black like all others. Why, no idear but works too
 };
 
 const additiveFilenameFixes: Record<string, string> = {
@@ -100,6 +101,7 @@ const additiveFilenameFixes: Record<string, string> = {
     '8': AdditiveKey.Colourings, // 8.png in additives displays "3"
     '11': AdditiveKey.Preservatives, // 11.png in additives displays "1"
     '13': AllergenKey.Poultry, // 13.png in additives displays "Poultry"
+    '14': AllergenKey.Beef, // 14.png in additives displays "Beef"
     '17': AdditiveKey.Phosphates, // 17.png in additives displays "6"
     '18': AdditiveKey.Sweeteners, // 18.png in additives displays "24"
     '21': AdditiveKey.SugarAndSweeteners, // 21.png in additives displays "11"
