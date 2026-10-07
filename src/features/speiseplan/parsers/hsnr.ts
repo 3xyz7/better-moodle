@@ -311,119 +311,131 @@ function extractPrice(text: string | null | undefined): number {
 }
 
 /**
- * Scrapes all dishes for a single day from a parsed HTML document.
- * @param doc - The parsed HTML document for one day's menu.
- * @param docUrl - The absolute URL the document was fetched from, used to resolve relative image URLs.
- * @param discoveredTypeIcons - Map of diet keys to icon URLs, populated as diet-tag images are found.
+ * Scrapes all dishes for a single day feed document, counting each menu item as a separate counter.
+ * @param doc - The parsed HTML document for the day feed.
+ * @param docUrl - The absolute URL the document was fetched from.
+ * @param discoveredTypeIcons - Map of diet keys to icon URLs.
+ * @param lang - Currently active language identifier for counter labels.
  * @returns The set of dishes found for this day.
  */
 function getDishesForDay(
     doc: Document,
     docUrl: string,
-    discoveredTypeIcons: Map<string, URL>
+    discoveredTypeIcons: Map<string, URL>,
+    lang: 'de' | 'en-gb'
 ): Set<Dish> {
     const dishes = new Set<Dish>();
 
-    doc.querySelectorAll<HTMLDivElement>('.menuitem').forEach(menuEl => {
-        if (menuEl.querySelector('.infocontainer')) return;
+    doc.querySelectorAll<HTMLDivElement>('.menuitem').forEach(
+        (menuEl, index) => {
+            if (menuEl.querySelector('.infocontainer')) return;
 
-        const location = '';
-        const dishTitle =
-            menuEl.querySelector('.container div')?.textContent?.trim() ?? '';
+            const counterIndex = index + 1;
+            const location =
+                lang === 'en-gb' ?
+                    `Counter ${counterIndex}`
+                :   `Theke ${counterIndex}`;
 
-        if (!dishTitle) return;
+            const dishTitle =
+                menuEl.querySelector('.container div')?.textContent?.trim() ??
+                '';
 
-        let totalStudentPrice = 0;
-        let totalGuestPrice = 0;
-        let hasPrice = false;
+            if (!dishTitle) return;
 
-        menuEl
-            .querySelectorAll('.article-component-header td')
-            .forEach(cell => {
-                const text = cell.textContent ?? '';
+            let totalStudentPrice = 0;
+            let totalGuestPrice = 0;
+            let hasPrice = false;
 
-                if (text.includes('Studierende') && !text.includes('Nicht')) {
-                    const price = extractPrice(text);
-                    if (price > 0) {
-                        totalStudentPrice += price;
-                        hasPrice = true;
-                    }
-                } else if (text.includes('Nicht Studierende')) {
-                    const price = extractPrice(text);
-                    if (price > 0) {
-                        totalGuestPrice += price;
-                        hasPrice = true;
-                    }
-                }
-            });
+            menuEl
+                .querySelectorAll('.article-component-header td')
+                .forEach(cell => {
+                    const text = cell.textContent ?? '';
 
-        const allergenes: string[] = [];
-        const additives: string[] = [];
-        const types: string[] = [];
-
-        menuEl
-            .querySelectorAll<HTMLImageElement>('img.allergenimage')
-            .forEach(img => {
-                const rawSrc = (img.getAttribute('src') ?? img.src).replace(
-                    /\\/g,
-                    '/'
-                );
-                const match = /(\w+)\/(\d+|[a-zA-Z])\.(?:png|jpg|svg)/i.exec(
-                    rawSrc
-                );
-
-                if (match) {
-                    const [, folder, rawId] = match;
-                    const isAdditiveFolder =
-                        folder.toLowerCase() === 'additives';
-
-                    let id: string;
-                    if (isAdditiveFolder) {
-                        id = additiveFilenameFixes[rawId] ?? rawId;
-                    } else {
-                        id = allergenFilenameFixes[rawId] ?? rawId;
-                    }
-
-                    if (DIET_KEYS.has(id)) {
-                        if (!types.includes(id)) {
-                            types.push(id);
+                    if (
+                        text.includes('Studierende') &&
+                        !text.includes('Nicht')
+                    ) {
+                        const price = extractPrice(text);
+                        if (price > 0) {
+                            totalStudentPrice += price;
+                            hasPrice = true;
                         }
-                        if (!discoveredTypeIcons.has(id)) {
-                            try {
-                                const absUrl = new URL(rawSrc, docUrl);
-                                discoveredTypeIcons.set(id, absUrl);
-                            } catch {
-                                // ignore invalid URL errors
+                    } else if (text.includes('Nicht Studierende')) {
+                        const price = extractPrice(text);
+                        if (price > 0) {
+                            totalGuestPrice += price;
+                            hasPrice = true;
+                        }
+                    }
+                });
+
+            const allergenes: string[] = [];
+            const additives: string[] = [];
+            const types: string[] = [];
+
+            menuEl
+                .querySelectorAll<HTMLImageElement>('img.allergenimage')
+                .forEach(img => {
+                    const rawSrc = (img.getAttribute('src') ?? img.src).replace(
+                        /\\/g,
+                        '/'
+                    );
+                    const match =
+                        /(\w+)\/(\d+|[a-zA-Z])\.(?:png|jpg|svg)/i.exec(rawSrc);
+
+                    if (match) {
+                        const [, folder, rawId] = match;
+                        const isAdditiveFolder =
+                            folder.toLowerCase() === 'additives';
+
+                        let id: string;
+                        if (isAdditiveFolder) {
+                            id = additiveFilenameFixes[rawId] ?? rawId;
+                        } else {
+                            id = allergenFilenameFixes[rawId] ?? rawId;
+                        }
+
+                        if (DIET_KEYS.has(id)) {
+                            if (!types.includes(id)) {
+                                types.push(id);
+                            }
+                            if (!discoveredTypeIcons.has(id)) {
+                                try {
+                                    const absUrl = new URL(rawSrc, docUrl);
+                                    discoveredTypeIcons.set(id, absUrl);
+                                } catch {
+                                    // ignore invalid URL errors
+                                }
+                            }
+                        } else if (isAdditiveFolder) {
+                            if (!additives.includes(id)) {
+                                additives.push(id);
+                            }
+                        } else {
+                            if (!allergenes.includes(id)) {
+                                allergenes.push(id);
                             }
                         }
-                    } else if (isAdditiveFolder) {
-                        if (!additives.includes(id)) {
-                            additives.push(id);
-                        }
-                    } else {
-                        if (!allergenes.includes(id)) {
-                            allergenes.push(id);
-                        }
                     }
-                }
-            });
+                });
 
-        dishes.add({
-            name: [{ text: dishTitle }],
-            location,
-            prices:
-                hasPrice ?
-                    [
-                        Number(totalStudentPrice.toFixed(2)),
-                        Number(totalGuestPrice.toFixed(2)),
-                    ]
-                :   [-1, -1],
-            allergenes,
-            additives,
-            types,
-            co2: false,
-        });
-    });
+            dishes.add({
+                name: [{ text: dishTitle }],
+                location,
+                prices:
+                    hasPrice ?
+                        [
+                            Number(totalStudentPrice.toFixed(2)),
+                            Number(totalGuestPrice.toFixed(2)),
+                        ]
+                    :   [-1, -1],
+                allergenes,
+                additives,
+                types,
+                co2: false,
+            });
+        }
+    );
 
     return dishes;
 }
@@ -431,8 +443,8 @@ function getDishesForDay(
 /**
  * Fetches and parses the HSNR/Studentenwerk Düsseldorf canteen menu feed.
  * @param url - The canteen's index URL, containing iframe links to each day's menu.
- * @param lang - The language to render additive/allergen/type labels in.
- * @returns A promise resolving to the parsed speiseplan data (dishes, allergens, additives, types).
+ * @param lang - The language to render labels in.
+ * @returns A promise resolving to the parsed speiseplan data.
  */
 const parse: Parser = (url: string, lang: 'de' | 'en-gb') =>
     getDocument(url, TEN_MINUTES).then(async ({ lastUpdate, value: doc }) => {
@@ -443,10 +455,14 @@ const parse: Parser = (url: string, lang: 'de' | 'en-gb') =>
         const allergenes = new Map<string, string>();
         const additives = new Map<string, string>();
 
+        const additiveKeyValues = new Set<string>(Object.values(AdditiveKey));
+        const allergenKeyValues = new Set<string>(Object.values(AllergenKey));
+
         Object.entries(currentLegend).forEach(([key, label]) => {
-            if (Object.values(AdditiveKey).includes(key as AdditiveKey)) {
+            if (DIET_KEYS.has(key)) return;
+            if (additiveKeyValues.has(key)) {
                 additives.set(key, label);
-            } else {
+            } else if (allergenKeyValues.has(key)) {
                 allergenes.set(key, label);
             }
         });
@@ -464,20 +480,14 @@ const parse: Parser = (url: string, lang: 'de' | 'en-gb') =>
         const iframeAbsoluteUrl =
             iframeSources[0] ? new URL(iframeSources[0], url).href : url;
 
-        const dayDocs = await Promise.all(
-            iframeSources.map(src => {
-                const dayUrl = new URL(src, url).href;
-                return getDocument(dayUrl, TEN_MINUTES).then(res => ({
-                    ...res,
-                    dayUrl,
-                }));
-            })
-        );
-
         const discoveredTypeIcons = new Map<string, URL>();
         const seenDateStrings = new Set<string>();
 
-        for (const { dayUrl, value: dayDoc } of dayDocs) {
+        // Each iframe represents a separate day feed
+        for (const src of iframeSources) {
+            const dayUrl = new URL(src, url).href;
+            const { value: dayDoc } = await getDocument(dayUrl, TEN_MINUTES);
+
             const dateStr =
                 dayDoc.querySelector('.headerblock p')?.textContent?.trim() ??
                 '';
@@ -487,7 +497,6 @@ const parse: Parser = (url: string, lang: 'de' | 'en-gb') =>
             }
 
             const dayDate = parseGermanDate(dateStr);
-
             if (
                 !dayDate ||
                 isNaN(dayDate.getTime()) ||
@@ -498,11 +507,14 @@ const parse: Parser = (url: string, lang: 'de' | 'en-gb') =>
 
             dayDate.setHours(0, 0, 0, 0);
 
+            // Get dishes for this day, with counters numbered starting from 1 for each day's menuitems
             const dayDishes = getDishesForDay(
                 dayDoc,
                 dayUrl,
-                discoveredTypeIcons
+                discoveredTypeIcons,
+                lang
             );
+
             if (dayDishes.size > 0) {
                 seenDateStrings.add(dateStr);
                 dishes.set(dayDate, dayDishes);
